@@ -8,3 +8,5 @@
 4. Change the `user` field in `docker-compose.yml` to your non-root user in the host-machine.
 5. Run `docker-compose up -d` to start the containers.
 6. Copy the `grafana-dashboard.json` to create a dashboard in Grafana.
+
+![image](https://github.com/user-attachments/assets/209b4c90-ac3e-41a7-9fab-0602d6079d00)
