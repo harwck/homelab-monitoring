@@ -10,6 +10,12 @@ services:
     restart: unless-stopped
     networks:
       - ts-monitoring
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q -O- http://localhost:9090/-/healthy || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     logging:
       driver: "json-file"
       options:
@@ -32,6 +38,12 @@ services:
       - ts-monitoring
     depends_on:
       - prometheus
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     logging:
       driver: "json-file"
       options:
@@ -42,4 +54,3 @@ networks:
   ts-monitoring:
     name: ts-monitoring
     driver: bridge
-
