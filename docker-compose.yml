@@ -1,0 +1,45 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    user: 1000:1000
+    container_name: prometheus-ts
+    hostname: prometheus-ts
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prom-data:/prometheus
+    restart: unless-stopped
+    networks:
+      - ts-monitoring
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  grafana:
+    image: grafana/grafana:11.6.0-ubuntu
+    container_name: grafana-ts
+    user: 1000:1000
+    hostname: grafana-ts
+    ports:
+      - "0.0.0.0:3088:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana-data:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - ts-monitoring
+    depends_on:
+      - prometheus
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  ts-monitoring:
+    name: ts-monitoring
+    driver: bridge
+
