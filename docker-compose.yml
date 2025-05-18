@@ -1,7 +1,7 @@
 services:
   prometheus:
     image: prom/prometheus:v3.2.1
-    user: 1000:1000
+    user: ${USER_ID}:${GROUP_ID}
     container_name: prometheus-ts
     hostname: prometheus-ts
     volumes:
@@ -25,10 +25,8 @@ services:
   grafana:
     image: grafana/grafana:11.6.0-ubuntu
     container_name: grafana-ts
-    user: 1000:1000
+    user: ${USER_ID}:${GROUP_ID}
     hostname: grafana-ts
-    ports:
-      - "0.0.0.0:3088:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
@@ -37,7 +35,8 @@ services:
     networks:
       - ts-monitoring
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1" ]
       interval: 30s
@@ -52,5 +51,5 @@ services:
 
 networks:
   ts-monitoring:
-    name: ts-monitoring
-    driver: bridge
+    external: true
+    name: nginx-proxy-manager
