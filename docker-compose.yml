@@ -1,6 +1,6 @@
 services:
   prometheus:
-    image: prom/prometheus:v3.2.1
+    image: prom/prometheus:v3.4.0
     user: ${USER_ID}:${GROUP_ID}
     container_name: prometheus-ts
     hostname: prometheus-ts
@@ -11,24 +11,24 @@ services:
     networks:
       - ts-monitoring
     healthcheck:
-      test: [ "CMD-SHELL", "wget -q -O- http://localhost:9090/-/healthy || exit 1" ]
+      test: [ "CMD-SHELL", "wget --spider http://localhost:9090/-/healthy || exit 1" ]
       interval: 30s
       timeout: 5s
       retries: 5
       start_period: 15s
     logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      driver: journald
 
   grafana:
-    image: grafana/grafana:11.6.0-ubuntu
+    image: grafana/grafana:12.0.1
+    command: ['./run.sh', '-disable-reporting']
     container_name: grafana-ts
     user: ${USER_ID}:${GROUP_ID}
     hostname: grafana-ts
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    env_file:
+      - .env
     volumes:
       - ./grafana-data:/var/lib/grafana
     restart: unless-stopped
@@ -44,12 +44,19 @@ services:
       retries: 5
       start_period: 15s
     logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      driver: journald
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.homesvr.haltonc.com`)"
+      - "traefik.http.routers.grafana.tls.certresolver=production"
+      - "traefik.http.routers.grafana.tls.domains[0].main=homesvr.haltonc.com"
+      - "traefik.http.routers.grafana.tls.domains[0].sans=*.homesvr.haltonc.com"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
 networks:
   ts-monitoring:
     external: true
-    name: nginx-proxy-manager
+    name: traefik
