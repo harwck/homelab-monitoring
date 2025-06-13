@@ -1,6 +1,6 @@
 services:
   prometheus:
-    image: prom/prometheus:v3.4.0
+    image: prom/prometheus:${PROMETHEUS_VERSION}
     user: ${USER_ID}:${GROUP_ID}
     container_name: prometheus-ts
     hostname: prometheus-ts
@@ -20,7 +20,7 @@ services:
       driver: journald
 
   grafana:
-    image: grafana/grafana:12.0.1
+    image: grafana/grafana:${GRAFANA_VERSION}
     command: ['./run.sh', '-disable-reporting']
     container_name: grafana-ts
     user: ${USER_ID}:${GROUP_ID}
