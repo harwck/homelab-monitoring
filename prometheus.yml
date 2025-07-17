@@ -13,8 +13,6 @@ scrape_configs:
     static_configs:
       - targets:
           - "traefik:8080"
-        labels:
-          service: "traefik"
     metrics_path: /metrics
     scheme: http
 
