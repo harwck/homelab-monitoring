@@ -1,9 +1,13 @@
 services:
   prometheus:
-    image: prom/prometheus:${PROMETHEUS_VERSION}
+    image: prom/prometheus:v3.8.0
     user: ${USER_ID}:${GROUP_ID}
     container_name: prometheus-ts
     hostname: prometheus-ts
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=90d
+      - --storage.tsdb.path=/prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prom-data:/prometheus
@@ -15,12 +19,28 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
-      start_period: 15s
+      start_period: 5s
     logging:
       driver: journald
+    labels:
+      wud.tag.include: ^v\d+\.\d+\.\d+$
+      wud.display.name: prometheus
+
+      traefik.enable: true
+      traefik.docker.network: traefik
+      traefik.http.routers.prometheus.entrypoints[0]: web
+      traefik.http.routers.prometheus.entrypoints[1]: websecure
+      traefik.http.routers.prometheus.rule: Host(`prometheus.homesvr.haltonc.com`)
+      traefik.http.routers.prometheus.tls.certresolver: production
+      traefik.http.routers.prometheus.tls.domains[0].main: homesvr.haltonc.com
+      traefik.http.routers.prometheus.tls.domains[0].sans: "*.homesvr.haltonc.com"
+      traefik.http.services.prometheus.loadbalancer.server.port: 9090
+      traefik.http.services.prometheus.loadbalancer.healthcheck.path: /-/healthy
+      traefik.http.services.prometheus.loadbalancer.healthcheck.interval: 15s
+      traefik.http.services.prometheus.loadbalancer.healthcheck.timeout: 5s
 
   grafana:
-    image: grafana/grafana:${GRAFANA_VERSION}
+    image: grafana/grafana:12.3.0
     command: ['./run.sh', '-disable-reporting']
     container_name: grafana-ts
     user: ${USER_ID}:${GROUP_ID}
@@ -42,7 +62,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
-      start_period: 15s
+      start_period: 5s
     logging:
       driver: journald
     labels:
@@ -58,6 +78,8 @@ services:
       traefik.http.services.grafana.loadbalancer.healthcheck.path: /api/health
       traefik.http.services.grafana.loadbalancer.healthcheck.interval: 15s
       traefik.http.services.grafana.loadbalancer.healthcheck.timeout: 5s
+      wud.tag.include: ^\d+\.\d+\.\d+$
+      wud.display.name: grafana
 
 networks:
   ts-monitoring:
